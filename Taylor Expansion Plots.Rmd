@@ -1,0 +1,157 @@
+---
+title: "Taylor Expansion Plots"
+author: "Pablo Morala"
+date: "22/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Check if needed libraries are installed and install/load them all:
+libraries = c("gtools","neuralnet","pracma","mvtnorm","ggplot2","cowplot","RColorBrewer")
+for (i in libraries) {
+  if(!require(i,character.only = TRUE)) {
+    install.packages(i)
+    library(i,character.only = TRUE)
+  }
+}
+
+```
+
+
+
+## Taylor expansion of activation functions:
+
+
+```{r}
+taylor_expansion_error <- function(f,q,tol,x,title){
+  #compute the true function
+  yf <- f(x)
+  #compute the Taylor approximation
+  p <- taylor(f, 0, q)
+  yp <- polyval(p, x)
+  #compute the erro as the absolute value of the difference
+  error <- abs(yf-yp)
+  
+  #get points to place error bars for error <= tol
+  ind=which(error<=tol)
+  error1=x[ind[1]]
+  error2=x[ind[length(ind)]]
+  
+  #create the plot:
+  df.plot <- data.frame(x,yf,yp,error)
+  
+  plot <- ggplot(df.plot,aes(x,yf))+geom_line()+geom_line(aes(x,yp),color = "red")+geom_line(aes(x,error),color = "blue", linetype = "dashed")+geom_hline(yintercept = 0,color = "gray", linetype ="dashed")+labs(x = "x")+labs(y = "y")+geom_vline(xintercept = error1,color = "gray", linetype ="dashed")+geom_vline(xintercept = error2,color = "gray", linetype ="dashed")+theme_cowplot(12)+ggtitle(title)+theme(plot.title = element_text(hjust = 0.5))
+  
+  return(plot)  
+}
+```
+
+## The softplus function:
+
+```{r warning=FALSE}
+
+
+f <- function(x) log(1+exp(x))
+q_max = 8
+tol=0.1
+x <- seq(-5, 5, length.out=1000)
+
+plots <- vector(mode = "list", length = q_max)
+for (q in seq(2,q_max,2)){
+  title=paste("Order q =",as.character(q))
+  plots[[q]]=taylor_expansion_error(f,q,tol,x,title)+ylim(-0.5,5)+ theme(plot.title = element_text(size=10))
+}
+
+plot = plot_grid(plots[[2]], plots[[4]],plots[[6]],plots[[8]], labels = c("")) 
+
+title <- ggdraw() + draw_label("Softplus Taylor approximation at 0", fontface='bold', size = 10)
+
+plot1=plot_grid(title, plot, ncol=1, rel_heights=c(0.1, 1)) 
+
+plot1
+
+
+```
+
+```{r}
+# Using tikzDevice to export the plots
+tikz(file = 'figures/taylor_softplus.tex',width=6, height=4)
+print(plot1)
+dev.off()
+```
+
+
+## The Hyperbolic tangent:
+
+
+```{r warning=FALSE}
+
+
+f <- function(x) tanh(x)
+q_max = 7
+tol=0.1
+x <- seq(-3, 3, length.out=1000)
+
+plots <- vector(mode = "list", length = q_max)
+for (q in seq(1,q_max,2)){
+  title=paste("Order q =",as.character(q))
+  plots[[q]]=taylor_expansion_error(f,q,tol,x,title)+ylim(-1.5,1.5)+ theme(plot.title = element_text(size=10))
+}
+
+plot = plot_grid(plots[[1]], plots[[3]],plots[[5]],plots[[7]], labels = c("")) 
+
+title <- ggdraw() + draw_label("Tanh Taylor approximation at 0", fontface='bold', size = 10)
+
+plot2=plot_grid(title, plot, ncol=1, rel_heights=c(0.1, 1)) 
+
+plot2
+
+```
+
+
+```{r}
+# Using tikzDevice to export the plots
+tikz(file = 'figures/taylor_tanh.tex',width=6, height=4)
+print(plot2)
+dev.off()
+```
+
+## The sigmoid:
+
+
+```{r warning=FALSE}
+
+
+f <- function(x) 1/(1+exp(-x))
+q_max = 7
+tol=0.1
+x <- seq(-5, 5, length.out=1000)
+
+plots <- vector(mode = "list", length = q_max)
+for (q in seq(1,q_max,2)){
+  title=paste("Order q =",as.character(q))
+  plots[[q]]=taylor_expansion_error(f,q,tol,x,title)+ylim(-.5,1.5)+ theme(plot.title = element_text(size=10))
+}
+
+plot = plot_grid(plots[[1]], plots[[3]],plots[[5]],plots[[7]], labels = c("")) 
+
+title <- ggdraw() + draw_label("Sigmoid Taylor approximation at 0", fontface='bold', size = 10)
+
+plot3=plot_grid(title, plot, ncol=1, rel_heights=c(0.1, 1)) 
+
+plot3
+
+
+
+```
+
+
+```{r}
+# Using tikzDevice to export the plots
+tikz(file = 'figures/taylor_sigmoid.tex',width=6, height=4)
+print(plot3)
+dev.off()
+```
+

@@ -1,0 +1,385 @@
+---
+title: "Simulations with [0,1] scaling"
+author: "Pablo Morala"
+date: "17/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Check if needed libraries are installed and install/load them all:
+libraries = c("gtools","neuralnet","pracma","mvtnorm","ggplot2","cowplot","RColorBrewer")
+for (i in libraries) {
+  if(!require(i,character.only = TRUE)) {
+    install.packages(i)
+    library(i,character.only = TRUE)
+  }
+}
+
+```
+
+In this document we have all the code to create the simulations of the MSE between the NN and the asociated PR for different activation functions, different number of neurons in the hidden layer $h_1$ and different values for the maximum degree $q$ in the Taylor approximation, all while sacaling the data to the $[0,1]$ range. 
+
+The number of performed simulations is always `n_simulation=500`. Then, the data is stored in an `.RDS` file so the results can be loaded and analyzed later.
+
+## Preliminaries
+
+Load needed functions from file "functions":
+
+```{r}
+# Needed functions (stored in separate R files)
+source("./functions/betas_from_weights.R")
+source("./functions/evaluate_PR.R")
+source("./functions/generate_normal_data.R")
+source("./functions/preprocesing.R")
+source("./functions/Automatic_example.R")
+```
+
+
+# Simulations:
+
+### 1. Scaling in the [0,1], `h_1=10` and `q-taylor=5`:
+
+```{r }
+#Set random seed for reproducibility
+set.seed(12345)
+
+##### Parameters for the data generation #####
+n_sample=200
+p=3
+q_original=2
+mean_range=c(-10,10)
+beta_range=c(-5,5)
+error_var=0.1
+
+#Scaling method:
+scale_method="0,1"
+
+##### Parameters for the NN #####
+# Hidden units
+h_1=10 
+# Activation function
+fun1 <- function(x) log(1 + exp(x))
+fun2 <- function(x) tanh(x)
+fun3 <- function(x) 1/(1+exp(-x))
+##### Max Degree for the Taylor approximation #####
+q_taylor=5
+
+#Loop of simulations:
+n_simulation=500
+simulation1.1.MSE=rep(0,n_simulation)
+simulation1.2.MSE=rep(0,n_simulation)
+simulation1.3.MSE=rep(0,n_simulation)
+for(i in 1:n_simulation){
+  #fun1
+  example.sim1=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun1,q_taylor)
+  simulation1.1.MSE[i]=example.sim1$MSE.NN.vs.PR
+  #fun2
+  example.sim2=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun2,q_taylor)
+  simulation1.2.MSE[i]=example.sim2$MSE.NN.vs.PR
+  #fun3
+  example.sim3=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun3,q_taylor)
+  simulation1.3.MSE[i]=example.sim3$MSE.NN.vs.PR
+}
+
+print("end")
+```
+
+
+```{r include=FALSE}
+
+simulation1.MSE=rbind(simulation1.1.MSE,simulation1.2.MSE,simulation1.3.MSE)
+
+saveRDS(simulation1.MSE,"simulation1.MSE")
+
+```
+
+
+### 2. Scaling in the [0,1], `h_1=10` and `q-taylor=3`:
+
+```{r , eval=FALSE}
+#Set random seed for reproducibility
+set.seed(12345)
+
+##### Parameters for the data generation #####
+n_sample=200
+p=3
+q_original=2
+mean_range=c(-10,10)
+beta_range=c(-5,5)
+error_var=0.1
+
+#Scaling method:
+scale_method="0,1"
+
+##### Parameters for the NN #####
+# Hidden units
+h_1=10 
+# Activation function
+fun1 <- function(x) log(1 + exp(x))
+fun2 <- function(x) tanh(x)
+fun3 <- function(x) 1/(1+exp(-x))
+##### Max Degree for the Taylor approximation #####
+q_taylor=3
+
+#Loop of simulations:
+n_simulation=500
+simulation2.1.MSE=rep(0,n_simulation)
+simulation2.2.MSE=rep(0,n_simulation)
+simulation2.3.MSE=rep(0,n_simulation)
+for(i in 1:n_simulation){
+  #fun1
+  example.sim1=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun1,q_taylor)
+  simulation2.1.MSE[i]=example.sim1$MSE.NN.vs.PR
+  #fun2
+  example.sim2=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun2,q_taylor)
+  simulation2.2.MSE[i]=example.sim2$MSE.NN.vs.PR
+  #fun3
+  example.sim3=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun3,q_taylor)
+  simulation2.3.MSE[i]=example.sim3$MSE.NN.vs.PR
+}
+
+print("end")
+```
+
+
+```{r include=FALSE}
+
+simulation2.MSE=rbind(simulation2.1.MSE,simulation2.2.MSE,simulation2.3.MSE)
+
+saveRDS(simulation2.MSE,"simulation2.MSE")
+
+```
+
+
+### 3. Scaling in the [0,1], `h_1=10` and `q-taylor=7`:
+
+```{r , eval=FALSE}
+#Set random seed for reproducibility
+set.seed(12345)
+
+##### Parameters for the data generation #####
+n_sample=200
+p=3
+q_original=2
+mean_range=c(-10,10)
+beta_range=c(-5,5)
+error_var=0.1
+
+#Scaling method:
+scale_method="0,1"
+
+##### Parameters for the NN #####
+# Hidden units
+h_1=10 
+# Activation function
+fun1 <- function(x) log(1 + exp(x))
+fun2 <- function(x) tanh(x)
+fun3 <- function(x) 1/(1+exp(-x))
+##### Max Degree for the Taylor approximation #####
+q_taylor=7
+
+#Loop of simulations:
+n_simulation=500
+simulation3.1.MSE=rep(0,n_simulation)
+simulation3.2.MSE=rep(0,n_simulation)
+simulation3.3.MSE=rep(0,n_simulation)
+for(i in 1:n_simulation){
+  #fun1
+  example.sim1=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun1,q_taylor)
+  simulation3.1.MSE[i]=example.sim1$MSE.NN.vs.PR
+  #fun2
+  example.sim2=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun2,q_taylor)
+  simulation3.2.MSE[i]=example.sim2$MSE.NN.vs.PR
+  #fun3
+  example.sim3=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun3,q_taylor)
+  simulation3.3.MSE[i]=example.sim3$MSE.NN.vs.PR
+}
+print("end")
+```
+
+
+```{r include=FALSE}
+
+simulation3.MSE=rbind(simulation3.1.MSE,simulation3.2.MSE,simulation3.3.MSE)
+
+saveRDS(simulation3.MSE,"simulation3.MSE")
+
+```
+
+
+
+### 4. Scaling in the [0,1], `h_1=4` and `q-taylor=5`:
+
+```{r }
+#Set random seed for reproducibility
+set.seed(12345)
+
+##### Parameters for the data generation #####
+n_sample=200
+p=3
+q_original=2
+mean_range=c(-10,10)
+beta_range=c(-5,5)
+error_var=0.1
+
+#Scaling method:
+scale_method="0,1"
+
+##### Parameters for the NN #####
+# Hidden units
+h_1=4
+# Activation function
+fun1 <- function(x) log(1 + exp(x))
+fun2 <- function(x) tanh(x)
+fun3 <- function(x) 1/(1+exp(-x))
+##### Max Degree for the Taylor approximation #####
+q_taylor=5
+
+#Loop of simulations:
+n_simulation=500
+simulation4.1.MSE=rep(0,n_simulation)
+simulation4.2.MSE=rep(0,n_simulation)
+simulation4.3.MSE=rep(0,n_simulation)
+for(i in 1:n_simulation){
+  #fun1
+  example.sim1=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun1,q_taylor)
+  simulation4.1.MSE[i]=example.sim1$MSE.NN.vs.PR
+  #fun2
+  example.sim2=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun2,q_taylor)
+  simulation4.2.MSE[i]=example.sim2$MSE.NN.vs.PR
+  #fun3
+  example.sim3=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun3,q_taylor)
+  simulation4.3.MSE[i]=example.sim3$MSE.NN.vs.PR
+}
+
+print("end")
+```
+
+
+
+```{r include=FALSE}
+
+simulation4.MSE=rbind(simulation4.1.MSE,simulation4.2.MSE,simulation4.3.MSE)
+
+saveRDS(simulation4.MSE,"simulation4.MSE")
+
+```
+
+
+### 5. Scaling in the [0,1], `h_1=4` and `q-taylor=3`:
+
+```{r }
+#Set random seed for reproducibility
+set.seed(12345)
+
+##### Parameters for the data generation #####
+n_sample=200
+p=3
+q_original=2
+mean_range=c(-10,10)
+beta_range=c(-5,5)
+error_var=0.1
+
+#Scaling method:
+scale_method="0,1"
+
+##### Parameters for the NN #####
+# Hidden units
+h_1=4
+# Activation function
+fun1 <- function(x) log(1 + exp(x))
+fun2 <- function(x) tanh(x)
+fun3 <- function(x) 1/(1+exp(-x))
+##### Max Degree for the Taylor approximation #####
+q_taylor=3
+
+#Loop of simulations:
+n_simulation=500
+simulation5.1.MSE=rep(0,n_simulation)
+simulation5.2.MSE=rep(0,n_simulation)
+simulation5.3.MSE=rep(0,n_simulation)
+for(i in 1:n_simulation){
+  #fun1
+  example.sim1=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun1,q_taylor)
+  simulation5.1.MSE[i]=example.sim1$MSE.NN.vs.PR
+  #fun2
+  example.sim2=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun2,q_taylor)
+  simulation5.2.MSE[i]=example.sim2$MSE.NN.vs.PR
+  #fun3
+  example.sim3=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun3,q_taylor)
+  simulation5.3.MSE[i]=example.sim3$MSE.NN.vs.PR
+}
+
+print("end")
+```
+
+
+
+```{r include=FALSE}
+
+simulation5.MSE=rbind(simulation5.1.MSE,simulation5.2.MSE,simulation5.3.MSE)
+
+saveRDS(simulation5.MSE,"simulation5.MSE")
+
+```
+
+
+### 6. Scaling in the [0,1], `h_1=4` and `q-taylor=7`:
+
+```{r }
+#Set random seed for reproducibility
+set.seed(12345)
+
+##### Parameters for the data generation #####
+n_sample=200
+p=3
+q_original=2
+mean_range=c(-10,10)
+beta_range=c(-5,5)
+error_var=0.1
+
+#Scaling method:
+scale_method="0,1"
+
+##### Parameters for the NN #####
+# Hidden units
+h_1=4
+# Activation function
+fun1 <- function(x) log(1 + exp(x))
+fun2 <- function(x) tanh(x)
+fun3 <- function(x) 1/(1+exp(-x))
+##### Max Degree for the Taylor approximation #####
+q_taylor=7
+
+#Loop of simulations:
+n_simulation=500
+simulation6.1.MSE=rep(0,n_simulation)
+simulation6.2.MSE=rep(0,n_simulation)
+simulation6.3.MSE=rep(0,n_simulation)
+for(i in 1:n_simulation){
+  #fun1
+  example.sim1=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun1,q_taylor)
+  simulation6.1.MSE[i]=example.sim1$MSE.NN.vs.PR
+  #fun2
+  example.sim2=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun2,q_taylor)
+  simulation6.2.MSE[i]=example.sim2$MSE.NN.vs.PR
+  #fun3
+  example.sim3=Automatic_example(n_sample,p,q_original,mean_range,beta_range,error_var,scale_method,h_1,fun3,q_taylor)
+  simulation6.3.MSE[i]=example.sim3$MSE.NN.vs.PR
+}
+
+print("end")
+```
+
+
+```{r include=FALSE}
+
+simulation6.MSE=rbind(simulation6.1.MSE,simulation6.2.MSE,simulation6.3.MSE)
+
+saveRDS(simulation6.MSE,"simulation6.MSE")
+
+```
+
+

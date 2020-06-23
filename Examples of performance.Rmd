@@ -1,0 +1,351 @@
+---
+title: "Examples of performance"
+author: "Pablo Morala"
+date: "22/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Check if needed libraries are installed and install/load them all:
+libraries = c("gtools","neuralnet","pracma","mvtnorm","ggplot2","cowplot","RColorBrewer","reshape","tikzDevice")
+for (i in libraries) {
+  if(!require(i,character.only = TRUE)) {
+    install.packages(i)
+    library(i,character.only = TRUE)
+  }
+}
+
+```
+
+
+```{r, include=FALSE}
+# Needed functions (stored in separate R files)
+source("functions/betas_from_weights.R")
+source("functions/evaluate_PR.R")
+source("functions/generate_normal_data.R")
+source("functions/preprocesing.R")
+source("functions/Automatic_example.R")
+source("functions/Automatic_PR_from_NN.R")
+source("functions/plot_Taylor_and_weights.R")
+source("functions/reshaping_MSE_simulations.R")
+```
+
+In this document we create the perfromance examples and the plots with the inout of the activation functions and the Taylor approximation.
+
+
+# Softplus activation function, $h_1=4$, $q=3$, data scaled to the interval $[0,1]$.
+
+```{r , echo=FALSE}
+#Set random seed for reproducibility
+set.seed(12345)
+
+##### Parameters for the data generation #####
+n_sample=200
+p=3
+q_original=2
+mean_range=c(-10,10)
+beta_range=c(-5,5)
+error_var=0.1
+
+#Generate the data:
+generated_data=generate_normal_data(n_sample,p,q_original,mean_range,beta_range,error_var)
+data=generated_data$data
+original_betas=generated_data$original_betas
+
+
+#Scale and separate train and test with desired method:
+scale_method="0,1"
+data.preprocesed=preprocesing(data,scale_method)
+train=data.preprocesed$train
+test=data.preprocesed$test
+
+##### Parameters for the NN #####
+# Hidden units
+h_1=4
+# Activation function
+fun <- function(x) log(1+exp(x))
+
+#To use neuralnet we need to create the formula as follows, Y~. does not work. This includes all the variables X:
+var.names <- names(train)
+formula <- as.formula(paste("Y ~", paste(var.names[!var.names %in% "Y"], collapse = " + ")))
+
+#train the net:
+nn <- neuralnet(formula,data=train,hidden=h_1,linear.output=T, act.fct = fun)
+
+##### Max Degree for the Taylor approximation #####
+q_taylor=3
+
+# Generation of the example:
+example=Automatic_PR_from_NN(train,test,nn,fun,q_taylor)
+
+plot.example=example$plot
+
+plot.example
+
+```
+
+
+
+
+
+```{r, echo=FALSE}
+
+#Create the Taylor plot with the input values:
+    x <- seq(-5, 5, length.out=1000)
+    tol=0.1
+    title="Taylor approximation and input values distribution"
+    
+    p=plot_Taylor_and_weights(example,fun,x,tol,q_taylor,title)
+  
+#Combine the plots
+    plot=plot_grid(plot.example, p, labels = c("","c)"), nrow = 2)
+    plot
+    
+```
+
+
+```{r}
+# Using tikzDevice to export the plots
+tikz(file = 'figures/example1.tex',width=6, height=5)
+print(plot)
+dev.off()
+```
+
+
+# Example2: Tanh activation function, $h_1=4$, $q=3$, data scaled to the interval $[0,1]$.
+
+
+```{r , echo=FALSE}
+#Set random seed for reproducibility
+set.seed(12345)
+
+##### Parameters for the data generation #####
+n_sample=200
+p=3
+q_original=2
+mean_range=c(-10,10)
+beta_range=c(-5,5)
+error_var=0.1
+
+#Generate the data:
+generated_data=generate_normal_data(n_sample,p,q_original,mean_range,beta_range,error_var)
+data=generated_data$data
+original_betas=generated_data$original_betas
+
+
+#Scale and separate train and test with desired method:
+scale_method="0,1"
+data.preprocesed=preprocesing(data,scale_method)
+train=data.preprocesed$train
+test=data.preprocesed$test
+
+##### Parameters for the NN #####
+# Hidden units
+h_1=4
+# Activation function
+fun <- function(x) tanh(x)
+
+#To use neuralnet we need to create the formula as follows, Y~. does not work. This includes all the variables X:
+var.names <- names(train)
+formula <- as.formula(paste("Y ~", paste(var.names[!var.names %in% "Y"], collapse = " + ")))
+
+#train the net:
+nn <- neuralnet(formula,data=train,hidden=h_1,linear.output=T, act.fct = fun)
+
+##### Max Degree for the Taylor approximation #####
+q_taylor=3
+
+# Generation of the example:
+example=Automatic_PR_from_NN(train,test,nn,fun,q_taylor)
+
+plot.example=example$plot
+
+plot.example
+
+
+```
+
+
+```{r, echo=FALSE}
+
+#Create the Taylor plot with the input values:
+    x <- seq(-2.5, 2.5, length.out=1000)
+    tol=0.1
+    title="Taylor approximation and input values distribution"
+    
+    p=plot_Taylor_and_weights(example,fun,x,tol,q_taylor,title)
+  
+#Combine the plots
+    plot=plot_grid(plot.example, p, labels = c("","c)"), nrow = 2)
+    plot
+    
+```
+
+
+
+```{r}
+# Using tikzDevice to export the plots
+tikz(file = 'figures/example2.tex',width=6, height=5)
+print(plot)
+dev.off()
+```
+
+# Example3: Tanh activation function, $h_1=4$, $q=3$, data scaled to the interval $[0,1]$.
+
+
+```{r , echo=FALSE}
+#Set random seed for reproducibility
+set.seed(123)
+
+##### Parameters for the data generation #####
+n_sample=200
+p=3
+q_original=2
+mean_range=c(-10,10)
+beta_range=c(-5,5)
+error_var=0.1
+
+#Generate the data:
+generated_data=generate_normal_data(n_sample,p,q_original,mean_range,beta_range,error_var)
+data=generated_data$data
+original_betas=generated_data$original_betas
+
+
+#Scale and separate train and test with desired method:
+scale_method="0,1"
+data.preprocesed=preprocesing(data,scale_method)
+train=data.preprocesed$train
+test=data.preprocesed$test
+
+##### Parameters for the NN #####
+# Hidden units
+h_1=4
+# Activation function
+fun <- function(x) tanh(x)
+
+#To use neuralnet we need to create the formula as follows, Y~. does not work. This includes all the variables X:
+var.names <- names(train)
+formula <- as.formula(paste("Y ~", paste(var.names[!var.names %in% "Y"], collapse = " + ")))
+
+#train the net:
+nn <- neuralnet(formula,data=train,hidden=h_1,linear.output=T, act.fct = fun)
+
+##### Max Degree for the Taylor approximation #####
+q_taylor=3
+
+# Generation of the example:
+example=Automatic_PR_from_NN(train,test,nn,fun,q_taylor)
+
+plot.example=example$plot
+
+plot.example
+
+
+```
+
+
+```{r, echo=FALSE}
+
+#Create the Taylor plot with the input values:
+    x <- seq(-2.5, 2.5, length.out=1000)
+    tol=0.1
+    title="Taylor approximation and input values distribution"
+    
+    p=plot_Taylor_and_weights(example,fun,x,tol,q_taylor,title)
+  
+#Combine the plots
+    plot=plot_grid(plot.example, p, labels = c("","c)"), nrow = 2)
+    plot
+    
+```
+
+
+
+```{r}
+# Using tikzDevice to export the plots
+tikz(file = 'figures/example3.tex',width=6, height=5)
+print(plot)
+dev.off()
+```
+
+
+
+# Example4: Tanh activation function, $h_1=4$, $q=5$, data scaled to the interval $[0,1]$.
+
+
+```{r , echo=FALSE}
+#Set random seed for reproducibility
+set.seed(1)
+
+##### Parameters for the data generation #####
+n_sample=200
+p=3
+q_original=2
+mean_range=c(-10,10)
+beta_range=c(-5,5)
+error_var=0.1
+
+#Generate the data:
+generated_data=generate_normal_data(n_sample,p,q_original,mean_range,beta_range,error_var)
+data=generated_data$data
+original_betas=generated_data$original_betas
+
+
+#Scale and separate train and test with desired method:
+scale_method="0,1"
+data.preprocesed=preprocesing(data,scale_method)
+train=data.preprocesed$train
+test=data.preprocesed$test
+
+##### Parameters for the NN #####
+# Hidden units
+h_1=4
+# Activation function
+fun <- function(x) tanh(x)
+
+#To use neuralnet we need to create the formula as follows, Y~. does not work. This includes all the variables X:
+var.names <- names(train)
+formula <- as.formula(paste("Y ~", paste(var.names[!var.names %in% "Y"], collapse = " + ")))
+
+#train the net:
+nn <- neuralnet(formula,data=train,hidden=h_1,linear.output=T, act.fct = fun)
+
+##### Max Degree for the Taylor approximation #####
+q_taylor=3
+
+# Generation of the example:
+example=Automatic_PR_from_NN(train,test,nn,fun,q_taylor)
+
+plot.example=example$plot
+
+plot.example
+
+
+```
+
+
+```{r, echo=FALSE}
+
+#Create the Taylor plot with the input values:
+    x <- seq(-3, 3, length.out=1000)
+    tol=0.1
+    title="Taylor approximation and input values distribution"
+    
+    p=plot_Taylor_and_weights(example,fun,x,tol,q_taylor,title)
+  
+#Combine the plots
+    plot=plot_grid(plot.example, p, labels = c("","c)"), nrow = 2)
+    plot
+    
+```
+
+
+
+```{r}
+# Using tikzDevice to export the plots
+tikz(file = 'figures/example4.tex',width=6, height=5)
+print(plot)
+dev.off()
+```

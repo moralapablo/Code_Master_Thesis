@@ -1,0 +1,113 @@
+---
+title: "Ejemplo graficas"
+author: "Pablo Morala"
+date: "19/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Check if needed libraries are installed and install/load them all:
+libraries = c("gtools","neuralnet","pracma","mvtnorm","ggplot2","cowplot","RColorBrewer","reshape","tikzDevice")
+for (i in libraries) {
+  if(!require(i,character.only = TRUE)) {
+    install.packages(i)
+    library(i,character.only = TRUE)
+  }
+}
+
+```
+
+
+```{r, include=FALSE}
+# Needed functions (stored in separate R files)
+source("functions/betas_from_weights.R")
+source("functions/evaluate_PR.R")
+source("functions/generate_normal_data.R")
+source("functions/preprocesing.R")
+source("functions/Automatic_example.R")
+source("functions/Automatic_PR_from_NN.R")
+source("functions/plot_Taylor_and_weights.R")
+source("functions/reshaping_MSE_simulations.R")
+```
+
+
+# Ejemplo de comparación entre betas originales y obtenidos:
+
+
+Datos orginados con PR de grado 2, escalados al intervalo [0,1]. NN con función softplus y 4 neuronas en la capa oculta, y PR ajustada con q=3.
+
+```{r , echo=FALSE}
+#Set random seed for reproducibility
+set.seed(12345)
+
+##### Parameters for the data generation #####
+n_sample=200
+p=3
+q_original=2
+mean_range=c(-10,10)
+beta_range=c(-5,5)
+error_var=0.1
+
+#Generate the data:
+generated_data=generate_normal_data(n_sample,p,q_original,mean_range,beta_range,error_var)
+data=generated_data$data
+original_betas=generated_data$original_betas
+
+
+#Scale and separate train and test with desired method:
+scale_method="0,1"
+data.preprocesed=preprocesing(data,scale_method)
+train=data.preprocesed$train
+test=data.preprocesed$test
+
+##### Parameters for the NN #####
+# Hidden units
+h_1=4
+# Activation function
+fun <- function(x) log(1+exp(x))
+
+#To use neuralnet we need to create the formula as follows, Y~. does not work. This includes all the variables X:
+var.names <- names(train)
+formula <- as.formula(paste("Y ~", paste(var.names[!var.names %in% "Y"], collapse = " + ")))
+
+#train the net:
+nn <- neuralnet(formula,data=train,hidden=h_1,linear.output=T, act.fct = fun)
+
+##### Max Degree for the Taylor approximation #####
+q_taylor=3
+
+# Generation of the example:
+ex.1=Automatic_PR_from_NN(train,test,nn,fun,q_taylor)
+
+ex.1$plot
+
+
+```
+
+Para poder comparar los coeficientes, como estamos generando los datos con grado 2 pero aproximamos con grado 3, tengo que añadir los coeficientes de grado 3 a los originales con valor 0:
+
+```{r}
+
+new_betas=ex.1$coeff
+new_betas
+
+original_betas_extended=c(original_betas,rep(0,length(new_betas)-length(original_betas)))
+original_betas_extended=t(as.matrix(original_betas_extended))
+colnames(original_betas_extended)=colnames(new_betas)
+original_betas_extended
+
+aux=rbind(original_betas_extended,new_betas)
+
+barplot(aux, beside=T,col=c("blue","green"))
+```
+
+No parece haber relación clara. Los betas en verde son los nuevos y en azul los originales. Está claro que si hubiera relación solo podría ser proprcional, ya que los datos han sido reescalados despues de generarlos, y los betas nuevos obtenidos de la NN actuan sobre datos en el intervalo [0,1] en este caso.
+
+Sin embargo si que es significativo que los betas obtenidos de la NN son también practicamente 0 para todos los términos de grado 3.
+
+
+
+
+
