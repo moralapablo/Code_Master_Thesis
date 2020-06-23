@@ -151,8 +151,12 @@ plot3 <- ggplot(df.first, aes(x=q.Taylor, y=MSE, fill=Act.Function)) +
   theme_cowplot(12) +
   theme(panel.grid.major.y = element_line( size=.05, color="grey", linetype = "dashed" ))
 
+<<<<<<< HEAD
 plot3 
 
+=======
+plot3
+>>>>>>> de12d218b3078290baf16095071475f91fe3f481
 ```
 
 ```{r}
