@@ -58,7 +58,13 @@ df6=reshaping_MSE_simulations(simulation6,"$h1=4$",7)
 df.first <- rbind(df2,df1, df3, df5, df4, df6)
 
 plot1 <- ggplot(df.first, aes(x=q.Taylor, y=MSE, fill=Act.Function)) + 
-  geom_boxplot() + scale_y_log10() + facet_grid(h.1 ~ .)  + labs(fill = "Activation\n Function") + xlab("Taylor approximaiton degree (q)") +  theme_cowplot(12)
+  geom_boxplot() + scale_y_log10() + 
+  facet_grid(h.1 ~ .)  + 
+  labs(fill = "Activation\n Function") + 
+  xlab("Taylor approximaiton degree (q)") +  
+  theme_cowplot(12) +
+  theme(panel.grid.major.y = element_line( size=.05, color="grey", linetype = "dashed" ))
+
 plot1
 ```
 
@@ -95,8 +101,14 @@ df6=reshaping_MSE_simulations(simulation12,"$h_1=4$",7)
 ```{r}
 df.second <- rbind(df2,df1, df3, df5, df4, df6)
 
-plot2 <- ggplot(df.second, aes(x=q.Taylor, y=MSE, fill=Act.Function)) + 
-  geom_boxplot() + scale_y_log10() + facet_grid(h.1 ~ .) + labs(fill = "Activation\n Function") + xlab("Taylor approximaiton degree (q)") +  theme_cowplot(12)
+plot2 <- ggplot(df.first, aes(x=q.Taylor, y=MSE, fill=Act.Function)) + 
+  geom_boxplot() + scale_y_log10() + 
+  facet_grid(h.1 ~ .)  + 
+  labs(fill = "Activation\n Function") + 
+  xlab("Taylor approximaiton degree (q)") +  
+  theme_cowplot(12) +
+  theme(panel.grid.major.y = element_line( size=.05, color="grey", linetype = "dashed" ))
+
 plot2
 ```
 
@@ -131,8 +143,14 @@ df6=reshaping_MSE_simulations(simulation18,"$h1=4$",7)
 ```{r}
 df.third <- rbind(df2,df1, df3, df5, df4, df6)
 
-plot3 <- ggplot(df.third, aes(x=q.Taylor, y=MSE, fill=Act.Function)) + 
-  geom_boxplot() + scale_y_log10() + facet_grid(h.1 ~ .) + labs(fill = "Activation\n Function") + xlab("Taylor approximaiton degree (q)") +  theme_cowplot(12)
+plot3 <- ggplot(df.first, aes(x=q.Taylor, y=MSE, fill=Act.Function)) + 
+  geom_boxplot() + scale_y_log10() + 
+  facet_grid(h.1 ~ .)  + 
+  labs(fill = "Activation\n Function") + 
+  xlab("Taylor approximaiton degree (q)") +  
+  theme_cowplot(12) +
+  theme(panel.grid.major.y = element_line( size=.05, color="grey", linetype = "dashed" ))
+
 plot3
 ```
 
