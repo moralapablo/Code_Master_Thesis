@@ -162,7 +162,5 @@ print(plot3)
 dev.off()
 ```
 
-```{r}
 
-```
 
