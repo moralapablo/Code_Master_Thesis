@@ -1,0 +1,326 @@
+---
+title: "Original beta Comparison"
+author: "Pablo Morala"
+date: "19/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Check if needed libraries are installed and install/load them all:
+libraries = c("gtools","neuralnet","pracma","mvtnorm","ggplot2","cowplot","reshape","tikzDevice","plot3D")
+for (i in libraries) {
+  if(!require(i,character.only = TRUE)) {
+    install.packages(i)
+    library(i,character.only = TRUE)
+  }
+}
+
+```
+
+
+```{r, include=FALSE}
+# Needed functions (stored in separate R files)
+source("functions/betas_from_weights.R")
+source("functions/evaluate_PR.R")
+source("functions/generate_normal_data.R")
+source("functions/preprocesing.R")
+source("functions/Automatic_example.R")
+source("functions/Automatic_PR_from_NN.R")
+source("functions/plot_Taylor_and_weights.R")
+source("functions/reshaping_MSE_simulations.R")
+```
+
+In this document we generate the plots used in the coefficients comparison section, between the original polynomial and the new one.
+
+# Example:
+
+
+Data generated with PR of order 2, with dimension $p=2$, scaled to the interval [0,1]. NN trained with sofgtplus, $h_1=4$, and PR dajusted with $q=3$
+
+
+Performance  plot of the example:
+
+```{r , echo=FALSE}
+#Set random seed for reproducibility
+set.seed(1234)
+
+##### Parameters for the data generation #####
+n_sample=200
+p=2
+q_original=2
+mean_range=c(-10,10)
+beta_range=c(-5,5)
+error_var=0.1
+
+#Generate the data:
+generated_data=generate_normal_data(n_sample,p,q_original,mean_range,beta_range,error_var)
+data=generated_data$data
+original_betas=generated_data$original_betas
+
+
+#Scale and separate train and test with desired method:
+scale_method="0,1"
+data.preprocesed=preprocesing(data,scale_method)
+train=data.preprocesed$train
+test=data.preprocesed$test
+
+##### Parameters for the NN #####
+# Hidden units
+h_1=4
+# Activation function
+fun <- function(x) log(1+exp(x))
+
+#To use neuralnet we need to create the formula as follows, Y~. does not work. This includes all the variables X:
+var.names <- names(train)
+formula <- as.formula(paste("Y ~", paste(var.names[!var.names %in% "Y"], collapse = " + ")))
+
+#train the net:
+nn <- neuralnet(formula,data=train,hidden=h_1,linear.output=T, act.fct = fun)
+
+##### Max Degree for the Taylor approximation #####
+q_taylor=3
+
+# Generation of the example:
+ex.1=Automatic_PR_from_NN(train,test,nn,fun,q_taylor)
+
+ex.1$plot
+
+
+```
+
+
+
+```{r}
+
+# Using tikzDevice to export the plots
+tikz(file = 'figures/example_for betas.tex',width=5, height=3)
+print(ex.1$plot)
+dev.off()
+
+```
+
+
+# Betas comparison (original and obtained)
+
+```{r, echo= FALSE}
+
+new_betas=ex.1$coeff
+
+
+original_betas_extended=c(original_betas,rep(0,length(new_betas)-length(original_betas)))
+original_betas_extended=t(as.matrix(original_betas_extended))
+colnames(original_betas_extended)=colnames(new_betas)
+
+
+
+df=as.data.frame(rbind(original_betas_extended,new_betas))
+names(df)=c("$\\beta_{0}$","$\\beta_{1}$","$\\beta_{2}$","$\\beta_{11}$","$\\beta_{12}$","$\\beta_{22}$","$\\beta_{111}$","$\\beta_{112}$","$\\beta_{122}$","$\\beta_{222}$")
+#names(df)=c("$\\beta_{0}$ ","$x_1$","$x_2$","$x_1^2$","$x_1 x_2$", "$x_2^2$", "$x_1^3$", "$x_1^2 x_2$", "$x_1 x_2^2$", "$x_2^3$")
+df$Betas=c("original betas","new betas")
+df=melt(df,id.vars = "Betas")
+df$Betas=as.factor(df$Betas)
+
+plot<- ggplot(df, aes(fill=Betas, y=value, x=variable)) + 
+  geom_col(position="dodge") + theme_cowplot(12) + 
+  scale_fill_manual("Legend", values=c("new betas"="orange","original betas"="purple"))+
+  xlab("Beta coeficcients")+ylab("Values")+
+  geom_hline(yintercept = 0) +
+  theme(axis.text.x = element_text(angle = 65, vjust = 1, hjust=1))
+
+plot
+```
+
+
+```{r}
+
+# Using tikzDevice to export the plots
+tikz(file = 'figures/betas_comparison.tex',width=5, height=3)
+print(plot)
+dev.off()
+
+```
+
+
+
+
+Redefine the evaluate PR for 2D input to be able to use it easierly when generating a surface.
+
+
+```{r, echo=FALSE}
+# redefining the evaluate PR function to be able to use it for every combination of 2 variables
+
+evaluate_PR_2D <- function(x1,x2,betas) {
+  #performs the result of the polynomial regression expresion given the betas and their labels.
+  
+  #join x1 and x2
+  x=c(x1,x2)
+  
+  response=betas[1] # this gets the intercept beta_0
+  for (i in 2:length(betas)){
+    #here the label is transformed into a vector of the needed length with the index of each variable
+    variable_indexes=as.integer(unlist(strsplit(colnames(betas)[i], ",")))
+    
+    #Intialize the product as 1 and loop over all the indexes l_j to obtain the product of al the needed variables x
+    product=1
+    for(j in 1:length(variable_indexes)){
+      product=product*x[variable_indexes[j]]
+    }
+    #We add to the response the product of those variables with their associated beta
+    response=response+betas[i]*product
+  }
+  return(response)
+}
+
+
+```
+
+
+Now, apply preprocessing and save mins and maxs to get back later to the original scale.
+
+
+```{r, echo=FALSE}
+#First apply the preprocessing:
+
+
+    maxs <- apply(data, 2, max) #obtain the max of each variable
+    mins <- apply(data, 2, min) #obtain the min of each variable
+    data_scaled <- as.data.frame(scale(data, center = mins, scale = maxs - mins))
+    X_scaled <- data_scaled[,1:2]
+
+
+#Obtain the predicted values for the test data with our Polynomial Regression
+  n=length(X_scaled[,1])
+  Y_PR=rep(0,n)
+  
+  for(i in 1:n){
+    Y_PR[i]=evaluate_PR(X_scaled[i,seq(p)],new_betas)
+  }
+  
+
+```
+
+Here we test that we can go back to the original sale:
+
+
+```{r, echo=FALSE}
+
+#Operación inversa para recuperar la escala original:
+data_scaled=cbind(X_scaled,Y_PR)
+
+data_retrieved=matrix(0,n,p+1)
+
+for (i in 1:n){
+  data_retrieved[i,]=as.matrix(data_scaled[i,]*(maxs-mins)+mins)
+}
+
+
+```
+
+
+These two following plots represent the surface of the original polynomial and the obtained with our formula, scaled back to the original units dataset. We can observe that the surface are quite similar in this local region. The red dots represent the response Y for the given dataset: In the case of the original polynomial Y is the given response for the dataset and in the obtained polynomial it is the predicted response.
+
+
+```{r, echo=FALSE}
+
+x1=seq(from=0,to=1,length.out = 100)
+x2=seq(from=0,to=1,length.out = 100)
+
+
+y_new=matrix(0,length(x1),length(x2))
+for (i in 1:length(x1)){
+  for (j in 1:length(x2)){
+    y_new[i,j]=evaluate_PR_2D(x1[i],x2[j],new_betas)
+  }
+}
+
+# Go back to the original scale:
+
+x1_original_scale=x1
+for (i in 1:length(x1)){
+   x1_original_scale[i]=as.matrix(x1[i]*(maxs[1]-mins[1])+mins[1])
+}
+x2_original_scale=x2
+for (i in 1:length(x2)){
+   x2_original_scale[i]=as.matrix(x2[i]*(maxs[2]-mins[2])+mins[2])
+}
+y_new_original_scale=y_new
+for (i in 1:length(y_new)){
+   y_new_original_scale[i]=as.matrix(y_new[i]*(maxs[3]-mins[3])+mins[3])
+}
+
+
+y_original=matrix(0,length(x1_original_scale),length(x2_original_scale))
+for (i in 1:length(x1_original_scale)){
+  for (j in 1:length(x2_original_scale)){
+    y_original[i,j]=evaluate_PR_2D(x1_original_scale[i],x2_original_scale[j],original_betas_extended)
+  }
+}
+
+par(mfrow=c(1,2))
+persp3D(x1_original_scale,x2_original_scale,y_new_original_scale, theta=25, phi = 15, xlab = "x1",ylab = "x2",zlab="y",main="Obtained Polynomial")
+points3D(data_retrieved[,1], data_retrieved[,2], data_retrieved[,3], colvar=NULL, col = "black", bg="red", size = 30, pch = 23, add=T)
+persp3D(x1_original_scale,x2_original_scale,y_original, theta=25, phi = 15,xlab = "x1",ylab = "x2",zlab="y",main="Original Polynomial")
+points3D(data_retrieved[,1], data_retrieved[,2], data$Y, colvar=NULL, col = "black", bg="red", size = 30, pch = 23, add=T)
+
+```
+
+
+
+
+Now we repeat it extending the limits to find that in a global sense the polynomials are different.
+
+
+```{r, echo=FALSE}
+
+x1=seq(from=-5,to=5,length.out = 100)
+x2=seq(from=-5,to=5,length.out = 100)
+
+
+y_new=matrix(0,length(x1),length(x2))
+for (i in 1:length(x1)){
+  for (j in 1:length(x2)){
+    y_new[i,j]=evaluate_PR_2D(x1[i],x2[j],new_betas)
+  }
+}
+
+# Go back to the original scale:
+
+x1_original_scale=x1
+for (i in 1:length(x1)){
+   x1_original_scale[i]=as.matrix(x1[i]*(maxs[1]-mins[1])+mins[1])
+}
+x2_original_scale=x2
+for (i in 1:length(x2)){
+   x2_original_scale[i]=as.matrix(x2[i]*(maxs[2]-mins[2])+mins[2])
+}
+y_new_original_scale=y_new
+for (i in 1:length(y_new)){
+   y_new_original_scale[i]=as.matrix(y_new[i]*(maxs[3]-mins[3])+mins[3])
+}
+
+
+y_original=matrix(0,length(x1_original_scale),length(x2_original_scale))
+for (i in 1:length(x1_original_scale)){
+  for (j in 1:length(x2_original_scale)){
+    y_original[i,j]=evaluate_PR_2D(x1_original_scale[i],x2_original_scale[j],original_betas_extended)
+  }
+}
+
+par(mfrow=c(1,2))
+persp3D(x1_original_scale,x2_original_scale,y_new_original_scale, theta=25, phi = 15, xlab = "x1",ylab = "x2",zlab="y",main="Obtained Polynomial")
+points3D(data_retrieved[,1], data_retrieved[,2], data_retrieved[,3], colvar=NULL, col = "black", bg="red", size = 30, pch = 23, add=T)
+persp3D(x1_original_scale,x2_original_scale,y_original, theta=25, phi = 15,xlab = "x1",ylab = "x2",zlab="y",main="Original Polynomial")
+points3D(data_retrieved[,1], data_retrieved[,2], data$Y, colvar=NULL, col = "black", bg="red", size = 30, pch = 23, add=T)
+
+```
+
+
+
+
+
+
+
+
+

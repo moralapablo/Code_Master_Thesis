@@ -45,12 +45,12 @@ simulation4=readRDS("./saved_simulations/simulation4.MSE")
 simulation5=readRDS("./saved_simulations/simulation5.MSE")
 simulation6=readRDS("./saved_simulations/simulation6.MSE")
 
-df1=reshaping_MSE_simulations(simulation1,"$h1=10$",5)
-df2=reshaping_MSE_simulations(simulation2,"$h1=10$",3)
-df3=reshaping_MSE_simulations(simulation3,"$h1=10$",7)
-df4=reshaping_MSE_simulations(simulation4,"$h1=4$",5)
-df5=reshaping_MSE_simulations(simulation5,"$h1=4$",3)
-df6=reshaping_MSE_simulations(simulation6,"$h1=4$",7)
+df1=reshaping_MSE_simulations(simulation1,"$h_1=10$",5)
+df2=reshaping_MSE_simulations(simulation2,"$h_1=10$",3)
+df3=reshaping_MSE_simulations(simulation3,"$h_1=10$",7)
+df4=reshaping_MSE_simulations(simulation4,"$h_1=4$",5)
+df5=reshaping_MSE_simulations(simulation5,"$h_1=4$",3)
+df6=reshaping_MSE_simulations(simulation6,"$h_1=4$",7)
 
 ```
 
@@ -130,12 +130,12 @@ simulation16=readRDS("./saved_simulations/simulation16.MSE")
 simulation17=readRDS("./saved_simulations/simulation17.MSE")
 simulation18=readRDS("./saved_simulations/simulation18.MSE")
 
-df1=reshaping_MSE_simulations(simulation13,"$h1=10$",5)
-df2=reshaping_MSE_simulations(simulation14,"$h1=10$",3)
-df3=reshaping_MSE_simulations(simulation15,"$h1=10$",7)
-df4=reshaping_MSE_simulations(simulation16,"$h1=4$",5)
-df5=reshaping_MSE_simulations(simulation17,"$h1=4$",3)
-df6=reshaping_MSE_simulations(simulation18,"$h1=4$",7)
+df1=reshaping_MSE_simulations(simulation13,"$h_1=10$",5)
+df2=reshaping_MSE_simulations(simulation14,"$h_1=10$",3)
+df3=reshaping_MSE_simulations(simulation15,"$h_1=10$",7)
+df4=reshaping_MSE_simulations(simulation16,"$h_1=4$",5)
+df5=reshaping_MSE_simulations(simulation17,"$h_1=4$",3)
+df6=reshaping_MSE_simulations(simulation18,"$h_1=4$",7)
 
 ```
 

@@ -1,5 +1,5 @@
 evaluate_PR <- function(x,betas) {
-  #performs the result of the polynomial regression expresion given the betasicients and their labels.
+  #performs the result of the polynomial regression expresion given the betas and their labels.
   x=unname(as.matrix(x)) #removes the colnames and rownames of the input variables when using a dataframe.
   
   response=betas[1] # this gets the intercept beta_0
