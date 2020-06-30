@@ -2,14 +2,12 @@
 
 This repository contains all the code needed to implement the formulas, the simulations and the plots  used in the following Master Thesis:
 
-	* **Title**: "Polynomial regression as a proxy for interpretability of Neural Networks"
-	* **Author :** Pablo Morala Miguélez
- * **Supervisors:** Iñaki Úcar Marqués
-   			             Jenny Alexandra Cifuentes
-   			             Rosa E. Lillo Rodríguez 
-	* **University**: Universidad Carlos III de Madrid (UC3M)
-	* **Date:** July 2020
-	* **Keywords**: Neural Networks, Polynomial Regression, Interpretability, Activation Functions, Machine Learning.
+* **Title**: "Polynomial regression as a proxy for interpretability of Neural Networks"
+* **Author :** Pablo Morala Miguélez
+* **Supervisors:** Iñaki Úcar Marqués, Jenny Alexandra Cifuentes, Rosa E. Lillo Rodríguez 
+* **University**: Universidad Carlos III de Madrid (UC3M)
+* **Date:** July 2020
+* **Keywords**: Neural Networks, Polynomial Regression, Interpretability, Activation Functions, Machine Learning.
 
 ### Summary
 
